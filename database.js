@@ -6,5 +6,3 @@ const sequelize = new Sequelize('SignSpeak', 'root', '', {
 });
 
 module.exports = sequelize;
-
-// ganti 'database-name', 'username', dan 'password' pada baris ke-3 sesuai dengan konfigurasi database MySQL Anda.
