@@ -1,4 +1,4 @@
-const { loginHandler, registerHandler, profileHandler, uploadPhotoHandler,editProfileHandler } = require('./handler');
+const { loginHandler, registerHandler, profileHandler, uploadPhotoHandler, editProfileHandler } = require('./handler');
 
 const routes = [
   {

@@ -6,8 +6,8 @@ const generateToken = (user) => {
   return token;
 };
 
-const validateToken=async(decoded,request,h)=>{
-  return{ isValid:true};
+const validateToken = async (decoded, request, h) => {
+  return { isValid: true };
 }
 
 module.exports = {

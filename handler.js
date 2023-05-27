@@ -23,10 +23,10 @@ const loginHandler = async (request, h) => {
     }
 
     // Memeriksa kecocokan password
-    bcrypt.compare(password, user.dataValues.password, function(err, result) {
+    bcrypt.compare(password, user.dataValues.password, function (err, result) {
       if (!result) {
         return h.response({
-          message:'Maaf Password yang Ada Masukan Salah'
+          message: 'Maaf Password yang Ada Masukan Salah'
         }).code(401);
       }
     });
@@ -99,18 +99,18 @@ const profileHandler = async (request, h) => {
 // const uploadPhotoHandler = async (request, h) => {
 //     try {
 //       const file = request.payload.file; // Mengambil file dari payload
-  
+
 //       // Proses pengolahan gambar dan prediksi di sini
-  
+
 //       // Contoh pengolahan gambar menggunakan package 'sharp'
 //       const processedImage = await sharp(file.path).resize(500).toBuffer();
-  
+
 //       // Melakukan prediksi pada gambar yang diupload
 //       const prediction = await predictImage(processedImage);
-  
+
 //       // Menghapus file sementara
 //       fs.unlinkSync(file.path);
-  
+
 //       // Mengembalikan hasil prediksi sebagai respons
 //       return prediction;
 //     } catch (error) {
@@ -142,9 +142,9 @@ const editProfileHandler = async (request, h) => {
     return {
       message: 'Profile updated successfully',
       user: {
-      id: user.dataValues.id,
-      fullname: user.dataValues.fullname,
-      email: user.dataValues.email
+        id: user.dataValues.id,
+        fullname: user.dataValues.fullname,
+        email: user.dataValues.email
       }
     };
   } catch (error) {

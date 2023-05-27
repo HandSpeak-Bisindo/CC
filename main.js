@@ -17,7 +17,7 @@ const init = async () => {
 
   server.auth.strategy('jwt', 'jwt', {
     key: 'secret-key',
-    validate:validateToken,
+    validate: validateToken,
     verifyOptions: { algorithms: ['HS256'] }
   });
 
