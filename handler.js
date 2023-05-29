@@ -1,12 +1,13 @@
 const { User } = require('./model');
 const { generateToken } = require('./auth');
-// const { uploadPhoto } = require('./upload');
-// const sharp = require('sharp');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
 
+
 const { loadModelFromBucket, performPrediction } = require('./tensorflow');
 const { Console } = require('console');
+
+const { Storage } = require('@google-cloud/storage');
 
 
 const loginHandler = async (request, h) => {
@@ -95,29 +96,55 @@ const profileHandler = async (request, h) => {
   }
 };
 
-// Handler untuk mengupload foto dan mengembalikan hasil prediksi
-// const uploadPhotoHandler = async (request, h) => {
-//     try {
-//       const file = request.payload.file; // Mengambil file dari payload
 
-//       // Proses pengolahan gambar dan prediksi di sini
+const storage = new Storage();
 
-//       // Contoh pengolahan gambar menggunakan package 'sharp'
-//       const processedImage = await sharp(file.path).resize(500).toBuffer();
+const uploadFileToBucket = async (file, bucketName, destination) => {
+  const bucket = storage.bucket(bucketName);
 
-//       // Melakukan prediksi pada gambar yang diupload
-//       const prediction = await predictImage(processedImage);
+  const uploadOptions = {
+    destination: destination,
+    gzip: true,
+    metadata: {
+      cacheControl: 'public, max-age=31536000',
+    },
+  };
 
-//       // Menghapus file sementara
-//       fs.unlinkSync(file.path);
+  await bucket.upload(file.path, uploadOptions);
 
-//       // Mengembalikan hasil prediksi sebagai respons
-//       return prediction;
-//     } catch (error) {
-//       console.error('Error:', error);
-//       throw error;
-//     }
-//   };
+  return `https://storage.googleapis.com/${bucketName}/${destination}`;
+};
+
+const uploadFileHandler = async (request, h) => {
+  try {
+    const file = request.payload.img;
+
+
+    // Pastikan file yang diunggah adalah gambar atau video
+    // if (!file.hapi.headers['content-type'].includes('image') && !file.hapi.headers['content-type'].includes('video')) {
+    //   return h.response('File harus berupa gambar atau video').code(400);
+    // }
+
+    const bucketName = 'handspeak';
+    const destination = `upload/${file.filename}`;
+
+
+    const fileUrl = await uploadFileToBucket(file, bucketName, destination);
+    console.log( fileUrl);
+
+    const modelBucketName = 'handspeak';
+    const modelFilename = 'model_data.h5';
+    const model = await loadModelFromBucket(modelBucketName, modelFilename);
+
+    const result = await performPrediction(model, file);
+
+    return { fileUrl, result };
+  } catch (error) {
+    console.error('Terjadi kesalahan:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+
 
 const editProfileHandler = async (request, h) => {
   try {
@@ -178,4 +205,5 @@ module.exports = {
   profileHandler,
   uploadFileAndPredictHandler,
   editProfileHandler,
+  uploadFileHandler
 };

@@ -1,4 +1,4 @@
-const { loginHandler, registerHandler, profileHandler, uploadPhotoHandler, editProfileHandler } = require('./handler');
+const { loginHandler, registerHandler, profileHandler, uploadFileHandler, editProfileHandler } = require('./handler');
 
 const routes = [
   {
@@ -19,20 +19,21 @@ const routes = [
       auth: 'jwt', // Menggunakan autentikasi JWT
     },
   },
-  // {
-  //   method: 'POST',
-  //   path: '/upload',
-  //   handler: uploadPhotoHandler, // Handler untuk rute upload foto
-  //   options: {
-  //     auth: 'jwt', // Menggunakan autentikasi JWT
-  //     payload: {
-  //       output: 'stream',
-  //       allow: 'multipart/form-data',
-  //       maxBytes: 2 * 1024 * 1024, // Batasan ukuran file upload (2MB)
-  //       parse: true,
-  //     },
-  //   },
-  // },
+
+  {
+    method: 'POST',
+    path: '/upload',
+    handler: uploadFileHandler, // Handler untuk rute upload file
+    options: {
+      auth: 'jwt', // Menggunakan autentikasi JWT
+      payload: {
+        output: 'file',
+        allow: 'multipart/form-data',
+        multipart: true,
+        parse: true,
+      },
+    },
+  },
 
   {
     method: 'PUT',

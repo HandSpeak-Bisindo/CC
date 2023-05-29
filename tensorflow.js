@@ -2,49 +2,55 @@ const { Storage } = require('@google-cloud/storage');
 const tf = require('@tensorflow/tfjs-node');
 
 const storage = new Storage();
-const bucketName = 'nama-bucket';
-const modelFileName = 'nama-file-model.h5';
 
-// Fungsi untuk memuat model H5 dari bucket Cloud Storage
-async function loadModelFromBucket() {
+// Fungsi untuk memuat model H5 dari Google Cloud Storage
+const loadModelFromBucket = async (bucketName, filename) => {
+  const bucket = storage.bucket(bucketName);
+  const file = bucket.file(`modeldata/` + filename);
+  const localFilename = `${filename}`;
+
+  await file.download({ destination: localFilename });
+
+  return tf.loadLayersModel(`file://${localFilename}`);
+};
+
+// Fungsi untuk melakukan prediksi menggunakan model pada file yang diunggah
+const performPrediction = async (model, file) => {
   try {
-    const bucket = storage.bucket(bucketName);
-    const file = bucket.file(modelFileName);
+    // Mengolah gambar
+    const image = await processImage(file);
 
-    // Memuat model H5 dari bucket menggunakan TensorFlow.js
-    const modelBuffer = await file.download();
-    const model = await tf.loadLayersModel(tf.node.buffer(modelBuffer[0]));
+    // Mengubah gambar menjadi tensor
+    const tensor = tf.node.decodeImage(image);
 
-    console.log('Model H5 berhasil dimuat dari bucket Cloud Storage');
+    // Mengubah bentuk tensor sesuai dengan input model
+    const reshapedTensor = tensor.reshape([1, ...desiredInputShape]);
 
-    return model;
+    // Melakukan prediksi menggunakan model
+    const prediction = model.predict(reshapedTensor);
+
+    // Mengambil hasil prediksi
+    const result = await prediction.data();
+
+    // Mengolah hasil prediksi menjadi string
+    const processedResult = processPrediction(result);
+
+    return processedResult;
   } catch (error) {
-    console.error('Terjadi kesalahan saat memuat model H5:', error);
+    console.error('Error performing prediction:', error);
     throw error;
   }
-}
+};
 
-// Fungsi untuk melakukan prediksi menggunakan model yang telah dimuat
-async function performPrediction(model, data) {
-  try {
-    // Lakukan prediksi pada data
-    const prediction = model.predict(data);
+// Fungsi untuk mengolah hasil prediksi menjadi string
+const processPrediction = (prediction) => {
+  // Lakukan operasi pengolahan hasil prediksi
+  // Sesuaikan dengan struktur dan format hasil yang diinginkan
+  const resultString = prediction.toString();
+  return resultString;
+};
 
-    // Ambil hasil prediksi sebagai tensor
-    const tensorResult = await prediction.data();
-
-    // Ubah tensor menjadi array
-    const resultArray = Array.from(tensorResult);
-
-    // Ubah array menjadi string
-    const resultString = resultArray.join(', ');
-
-    // Kembalikan hasil prediksi sebagai string
-    return resultString;
-  } catch (error) {
-    console.error('Terjadi kesalahan saat melakukan prediksi:', error);
-    throw error;
-  }
-}
-
-module.exports = { loadModelFromBucket, performPrediction };
+module.exports = {
+  loadModelFromBucket,
+  performPrediction,
+};
