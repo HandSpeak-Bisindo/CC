@@ -1,13 +1,17 @@
 const { User } = require('./model');
 const { generateToken } = require('./auth');
 const fs = require('fs');
+const tf = require('@tensorflow/tfjs-node');
+
 const bcrypt = require('bcrypt');
 
 
 const { loadModelFromBucket, performPrediction } = require('./tensorflow');
-const { Console } = require('console');
 
 const { Storage } = require('@google-cloud/storage');
+
+const { spawnSync } = require('child_process');
+const path = require('path');
 
 
 const loginHandler = async (request, h) => {
@@ -111,8 +115,13 @@ const uploadFileToBucket = async (file, bucketName, destination) => {
   };
 
   await bucket.upload(file.path, uploadOptions);
+  const files = bucket.file(destination);
+  
+  // Unduh file dari Cloud Storage
+  const [fileData] = await files.download();
 
-  return `https://storage.googleapis.com/${bucketName}/${destination}`;
+  // FileData adalah buffer gambar
+  return fileData;
 };
 
 const uploadFileHandler = async (request, h) => {
@@ -130,14 +139,25 @@ const uploadFileHandler = async (request, h) => {
 
 
     const fileUrl = await uploadFileToBucket(file, bucketName, destination);
-    console.log( fileUrl);
 
     const modelBucketName = 'handspeak';
     const modelFilename = 'model_data.h5';
-    const model = await loadModelFromBucket(modelBucketName, modelFilename);
+    // const model = await loadModelFromBucket(modelBucketName, modelFilename);
+    console.log("okee");
 
-    const result = await performPrediction(model, file);
+    // disini error
+    // const pythonProcess = await spawnSync('python', ["model.py",{
+    //   encoding: 'utf-8'
+    // }]);
 
+
+    const pathModel = path.join(__dirname, 'modes');
+
+    
+    const model = await tf.node.loadSavedModel(pathModel);
+    console.log(model);
+
+    const result = await performPrediction(model, fileUrl);
     return { fileUrl, result };
   } catch (error) {
     console.error('Terjadi kesalahan:', error);

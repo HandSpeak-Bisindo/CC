@@ -2,7 +2,7 @@ const { request } = require('express');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (user) => {
-  const token = jwt.sign({ id: user.id }, 'secret-key', { expiresIn: '1h' });
+  const token = jwt.sign({ id: user.id }, 'secret-key', { expiresIn: '2d' });
   return token;
 };
 
