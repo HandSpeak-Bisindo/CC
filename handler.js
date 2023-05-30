@@ -143,19 +143,14 @@ const uploadFileHandler = async (request, h) => {
     const modelBucketName = 'handspeak';
     const modelFilename = 'model_data.h5';
     // const model = await loadModelFromBucket(modelBucketName, modelFilename);
-    console.log("okee");
 
     // disini error
     // const pythonProcess = await spawnSync('python', ["model.py",{
     //   encoding: 'utf-8'
     // }]);
 
-
-    const pathModel = path.join(__dirname, 'modes');
-
     
-    const model = await tf.node.loadSavedModel(pathModel);
-    console.log(model);
+    const model = await tf.loadLayersModel('file://saved_model/model.json');
 
     const result = await performPrediction(model, fileUrl);
     return { fileUrl, result };

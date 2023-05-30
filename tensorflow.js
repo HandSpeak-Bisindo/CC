@@ -18,6 +18,22 @@ const loadModelFromBucket = async (bucketName, filename) => {
   return tf.loadLayersModel(`file://${localFilename}`);
 };
 
+async function preprocess_image(imageBuffer) {
+  const resizedImageBuffer = await sharp(imageBuffer).resize(150, 150).toBuffer();
+
+
+    const imageArray = Array.from(resizedImageBuffer);
+    const imageTypedArray = new Uint8Array(imageArray);
+
+
+    const imageTensor = tf.tensor(imageTypedArray);
+  
+    const reshapedImage = imageTensor.reshape([150, 150, 3]).expandDims(0);
+    const finalReshapedImage = reshapedImage.div(1/255);
+
+  return finalReshapedImage;
+}
+
 // Fungsi untuk memproses gambar sebelum dilakukan prediksi
 const processImage = async (file) => {
   try {
@@ -63,15 +79,12 @@ const processPrediction = (prediction) => {
 const performPrediction = async (model, file) => {
   try {
     // Mengolah gambar
-    const image = await processImage(file);
-
-    console.log(image);
+    const image = await preprocess_image(file);
 
     // Mengubah array gambar menjadi tensor
-    const tensor = tf.tensor(image);
 
     // Melakukan prediksi menggunakan model
-    const prediction = await model.predict(tensor);
+    const prediction = await model.predict(image);
 
     // Mengambil hasil prediksi
     const result = await prediction.data();
