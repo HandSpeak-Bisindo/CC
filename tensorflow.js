@@ -2,63 +2,37 @@ const { Storage } = require('@google-cloud/storage');
 const tf = require('@tensorflow/tfjs-node');
 const sharp = require('sharp');
 console.log('Versi TensorFlow Node:', tf.version.tfjs);
+const Jimp = require('jimp');
 
 
 
-const storage = new Storage();
 
-// Fungsi untuk memuat model H5 dari Google Cloud Storage
-const loadModelFromBucket = async (bucketName, filename) => {
-  const bucket = storage.bucket(bucketName);
-  const file = bucket.file(`modeldata/` + filename);
-  const localFilename = `${filename}`;
-
-  await file.download({ destination: localFilename });
-
-  return tf.loadLayersModel(`file://${localFilename}`);
-};
+// const storage = new Storage();
 
 async function preprocess_image(imageBuffer) {
   const resizedImageBuffer = await sharp(imageBuffer).resize(150, 150).toBuffer();
 
+  const image = await Jimp.read(resizedImageBuffer);
+  const imageArray = Array.from(image.bitmap.data);
+  const imageTypedArray = new Uint8Array(imageArray);
 
-    const imageArray = Array.from(resizedImageBuffer);
-    const imageTypedArray = new Uint8Array(imageArray);
+  const imageTensor = tf.tensor3d(imageTypedArray, [image.bitmap.height, image.bitmap.width, 4]);
 
-
-    const imageTensor = tf.tensor(imageTypedArray);
-  
-    const reshapedImage = imageTensor.reshape([150, 150, 3]).expandDims(0);
-    const finalReshapedImage = reshapedImage.div(1/255);
-
-  return finalReshapedImage;
+  // Periksa jika dimensi gambar adalah [height, width, channels] dan jumlah saluran warna adalah 3 atau 1
+  if (imageTensor.shape[2] === 4) {
+    const reshapedImage = imageTensor.slice([0, 0, 0], [150, 150, 3]);
+    const finalReshapedImage = reshapedImage.div(255);
+    return finalReshapedImage;
+  } else if (imageTensor.shape[2] === 1) {
+    const finalReshapedImage = imageTensor.div(255);
+    return finalReshapedImage;
+  } else {
+    throw new Error('Format gambar tidak valid.');
+  }
 }
 
-// Fungsi untuk memproses gambar sebelum dilakukan prediksi
-const processImage = async (file) => {
-  try {
-    const imageBuffer = file;
-    // const resizedImage = tf.node.decodeImage(imageBuffer);
-    // const resizedImageTensor = tf.image.resizeBilinear(resizedImage, [150, 150]);
-    
-    // // Normalisasi gambar (opsional)
-    // const normalizedImageTensor = resizedImageTensor.div(tf.scalar(255));
-    
-    // // Mengubah tensor gambar menjadi tensor batch dengan dimensi [1, height, width, channels]
-    // const batchedImageTensor = normalizedImageTensor.expandDims(0);
-    // console.log(batchedImageTensor);
 
-    // Mengubah tensor menjadi array JavaScript
-    // const processedImage = batchedImageTensor.arraySync();
-    const processedImage = await sharp(imageBuffer).resize(150, 150).normalise().toBuffer();
 
-    // Mengembalikan gambar yang telah diproses
-    return processedImage;
-  } catch (error) {
-    console.error('Error processing image:', error);
-    throw error;
-  }
-};
 
 // Fungsi untuk mengolah hasil prediksi menjadi string
 const processPrediction = (prediction) => {
@@ -81,10 +55,11 @@ const performPrediction = async (model, file) => {
     // Mengolah gambar
     const image = await preprocess_image(file);
 
-    // Mengubah array gambar menjadi tensor
+    // Menambahkan dimensi batch pada input
+    const batchedInput = image.expandDims(0);
 
     // Melakukan prediksi menggunakan model
-    const prediction = await model.predict(image);
+    const prediction = await model.predict(batchedInput);
 
     // Mengambil hasil prediksi
     const result = await prediction.data();
@@ -99,4 +74,5 @@ const performPrediction = async (model, file) => {
   }
 };
 
-module.exports = {loadModelFromBucket, performPrediction};
+
+module.exports = { performPrediction};

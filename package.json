@@ -12,6 +12,7 @@
     "fs": "^0.0.1-security",
     "hapi": "^18.1.0",
     "hapi-auth-jwt2": "^10.4.0",
+    "jimp": "^0.22.8",
     "jsonwebtoken": "^9.0.0",
     "mysql2": "^3.3.2",
     "sequelize": "^6.31.1",

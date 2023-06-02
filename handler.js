@@ -6,7 +6,7 @@ const tf = require('@tensorflow/tfjs-node');
 const bcrypt = require('bcrypt');
 
 
-const { loadModelFromBucket, performPrediction } = require('./tensorflow');
+const { performPrediction } = require('./tensorflow');
 
 const { Storage } = require('@google-cloud/storage');
 
@@ -127,28 +127,11 @@ const uploadFileToBucket = async (file, bucketName, destination) => {
 const uploadFileHandler = async (request, h) => {
   try {
     const file = request.payload.img;
-
-
-    // Pastikan file yang diunggah adalah gambar atau video
-    // if (!file.hapi.headers['content-type'].includes('image') && !file.hapi.headers['content-type'].includes('video')) {
-    //   return h.response('File harus berupa gambar atau video').code(400);
-    // }
-
     const bucketName = 'handspeak';
     const destination = `upload/${file.filename}`;
 
 
     const fileUrl = await uploadFileToBucket(file, bucketName, destination);
-
-    const modelBucketName = 'handspeak';
-    const modelFilename = 'model_data.h5';
-    // const model = await loadModelFromBucket(modelBucketName, modelFilename);
-
-    // disini error
-    // const pythonProcess = await spawnSync('python', ["model.py",{
-    //   encoding: 'utf-8'
-    // }]);
-
     
     const model = await tf.loadLayersModel('file://saved_model/model.json');
 
@@ -196,29 +179,12 @@ const editProfileHandler = async (request, h) => {
 };
 
 
-async function uploadFileAndPredictHandler(request, h) {
-  try {
-    const { file } = request.payload;
-
-    // Memuat model H5 dari bucket Cloud Storage
-    const model = await loadModelFromBucket();
-
-    // Melakukan prediksi menggunakan model pada file yang diunggah
-    const result = await performPrediction(model, file);
-
-    return { result };
-  } catch (error) {
-    console.error('Terjadi kesalahan:', error);
-    throw error;
-  }
-};
-
 
 module.exports = {
   loginHandler,
   registerHandler,
   profileHandler,
-  uploadFileAndPredictHandler,
+  // uploadFileAndPredictHandler,
   editProfileHandler,
   uploadFileHandler
 };
