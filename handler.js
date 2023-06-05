@@ -136,7 +136,7 @@ const uploadFileHandler = async (request, h) => {
     const model = await tf.loadLayersModel('file://saved_model/model.json');
 
     const result = await performPrediction(model, fileUrl);
-    return { fileUrl, result };
+    return result;
   } catch (error) {
     console.error('Terjadi kesalahan:', error);
     return h.response('Internal server error').code(500);
