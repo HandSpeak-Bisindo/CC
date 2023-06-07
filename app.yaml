@@ -1,10 +1,9 @@
-runtime: nodejs16
-env: standard
+runtime: nodejs20
 
-automatic_scaling:
-  target_cpu_utilization: 0.85
-  min_instances: 1
-  max_instances: 10
+# automatic_scaling:
+#   target_cpu_utilization: 0.85
+#   min_instances: 1
+#   max_instances: 10
 
 handlers:
   - url: /.*
