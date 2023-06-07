@@ -25,7 +25,7 @@ const routes = [
     path: '/upload',
     handler: uploadFileHandler, // Handler untuk rute upload file
     options: {
-      auth: 'jwt', // Menggunakan autentikasi JWT
+      // auth: 'jwt', // Menggunakan autentikasi JWT
       payload: {
         output: 'file',
         allow: 'multipart/form-data',
