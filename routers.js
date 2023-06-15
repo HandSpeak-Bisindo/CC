@@ -2,6 +2,13 @@ const { loginHandler, registerHandler, profileHandler, uploadFileHandler, editPr
 
 const routes = [
   {
+    method: 'GET',
+    path: '/',
+    handler: (request, h) => {
+      return h.response('HandSpek API');
+    }
+  },
+  {
     method: 'POST',
     path: '/login',
     handler: loginHandler, // Handler untuk rute login
